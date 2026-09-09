@@ -257,4 +257,4 @@ flota_vehiculos/
 
 Proyecto académico desarrollado en equipo para el Grado en Ingeniería del Software de la Universidad Complutense de Madrid.
 
-**Rodrigo Baños Fernández** — [LinkedIn](https://linkedin.com/in/rodrigobanos) · [Portfolio](https://rodrigobanosdev.vercel.app)
+**Rodrigo Baños Fernández** — [LinkedIn](https://linkedin.com/in/rodrigobanos)
