@@ -1,0 +1,378 @@
+:root {
+    --primary-color: #0ea5e9;
+    --secondary-color: #64748b;
+    --tercer-color: #1e293b;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --background-color: #0f172a;
+    --text-color: #f8fafc;
+    --highlight-color: #ffeeba;
+}
+
+/* General */
+html, body {
+    height: 100%; 
+    margin: 0; 
+    display: flex;
+    flex-direction: column; 
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.navbar {
+    height: 80px; 
+    display: flex;
+    align-items: center; 
+    background-color: var(--tercer-color); 
+}
+.navbar h4{
+    font-size:140%;
+    margin-right:10%;
+    margin-top:1%;
+    color:white;
+}
+h4{
+    font-size:140%;
+}
+
+.navbar-brand img {
+    max-height: 70px;
+    width: auto; 
+}
+
+.navbar-brand, .navbar-nav .nav-link {
+    color: #94a3b8 !important;
+}
+
+.navbar-brand:hover, .navbar-nav .nav-link:hover {
+    color: white !important;
+}
+
+/* Formularios */
+.form-group label {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.form-control {
+    border-radius: 0.25rem;
+    border: 1px solid #334155;
+    font-size: 100%;
+    background-color: #1e293b;
+    color: white;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25);
+    background-color: #1e293b;
+    color: white;
+}
+
+button {
+    border-radius: 0.25rem;
+    font-size: 100%;
+    padding: 10px 20px;
+    margin-top: 1%;
+}
+.btn{
+    font-size: 110%;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0284c7;
+    border-color: #0284c7;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: #16a34a;
+    border-color: #16a34a;
+}
+
+.mt-5 {
+    margin-top: 5rem;
+}
+
+/* Estilos para las alertas */
+.alert {
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.alert-warning {
+    background-color: #fef3c7;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.alert-success {
+    background-color: #dcfce7;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.fade-alert {
+    opacity: 1;
+    transition: opacity 4s ease-out;
+}
+
+.fade-alert.fade {
+    opacity: 0;
+}
+
+.nav-item {
+    margin-right: 1rem;
+}
+
+.navbar-toggler-icon {
+    background-color: #ffffff;
+}
+
+/*Animaciones iniciales, fade-in*/
+.fade-in {
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Efecto de pulsación para los botones */
+.pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Estilo para el botón de accesibilidad */
+#accesibilidadBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+}
+
+/* Estilo para el contenedor de opciones de accesibilidad */
+.accesibilidad-options {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background-color: var(--tercer-color);
+    border: 1px solid #334155;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    display: none; 
+    width: 250px;
+    z-index: 1000;
+}
+
+.accesibilidad-options h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+/* Estilos para las opciones de accesibilidad */
+.accesibilidad-options div {
+    margin-bottom: 10px;
+}
+
+.accesibilidad-options label {
+    font-size: 14px;
+    margin-right: 10px;
+    color: #94a3b8;
+}
+
+.botones-indice {
+    flex: 1; 
+    background-image: url('/images/fondo_inicio_sesion.jpeg');
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    height: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center;
+}
+
+.dashboard-indice {
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat;
+    height: 100%; 
+    display: flex; 
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+}
+
+section.py-5 {
+    flex: 1; 
+}
+
+.contacto{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* La sección principal debe ocupar el espacio restante */
+.dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+     
+    background-image: url('/images/fondo_dashboard.jpg');
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    
+}
+
+.modificar-eventos {
+    background-image: url('/images/fondo_dashboard.jpg');
+    background-size: cover;
+    background-position: center; 
+    background-repeat: no-repeat; 
+    flex: 1; 
+}
+
+/* Footer siempre al final */
+footer {
+    background-color: var(--tercer-color); 
+    color: #94a3b8; 
+    text-align: center;
+    padding: 2px;
+    font-size:80%;
+    margin-top: auto;
+}
+
+footer a {
+    color: var(--primary-color);
+}
+
+.custom-asterisco {
+    font-size:40%; 
+    color: #ef4444;
+    vertical-align:middle; 
+}
+
+@media (max-width: 1000px) {
+    
+    .navbar h4{
+        font-size:90%;
+        margin-right:5%;
+        margin-top:-3%;
+        color:white;
+    }
+
+    .navbar-brand img {
+    max-height: 50px;
+    width: auto; 
+    }
+
+    .container {
+        margin-top: 2rem;
+    }
+
+    .navbar-nav {
+        margin-top: 1rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        font-size: 0.9rem;
+    }
+
+    button {
+        font-size: 1rem;
+    }
+}
+
+/* Estilo de fondo para la página de registro e inicio de sesión */
+.row {
+    background-color: rgba(30, 41, 59, 0.95);
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Dropdown del navbar */
+.dropdown-menu {
+    background-color: var(--tercer-color);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.dropdown-menu .dropdown-item {
+    color: #f8fafc;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dropdown-menu .dropdown-divider {
+    border-color: rgba(255,255,255,0.1);
+}
+
+/* Estilos para links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #38bdf8;
+}
+
+/* Personalización de la selección */
+select.form-control {
+    background-color: #1e293b;
+    color: white;
+}
+
+select.form-control option {
+    background-color: #1e293b;
+    color: white;
+}

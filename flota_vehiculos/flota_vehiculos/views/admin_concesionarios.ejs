@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+
+    <style>
+        .btn-success {
+            background-color: green;
+            border-color: rgb(7, 69, 7)
+        }
+        .btn-success:hover {
+            background-color: rgb(7, 55, 7);
+            border-color: rgb(5, 31, 5);
+        }
+        .principal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 85%; 
+        }
+    </style>
+</head>
+<body class="fade-in">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="/dashboard">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard"><i class="fas fa-home me-1"></i>Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vehiculos"><i class="fas fa-car me-1"></i>Vehículos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mis_reservas"><i class="fas fa-calendar-alt me-1"></i>Mis Reservas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/perfil"><i class="fas fa-user me-1"></i>Perfil</a>
+                </li>
+                <% if (user.rol === 'admin') { %>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cogs me-1"></i>Administración
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/admin/vehiculos"><i class="fas fa-car-side me-2"></i>Gestión Vehículos</a></li>
+                        <li><a class="dropdown-item" href="/admin/concesionarios"><i class="fas fa-building me-2"></i>Gestión Concesionarios</a></li>
+                        <li><a class="dropdown-item" href="/admin/usuarios"><i class="fas fa-users me-2"></i>Gestión Usuarios</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/cargar_json"><i class="fas fa-file-import me-2"></i>Cargar JSON</a></li>
+                        <li><a class="dropdown-item" href="/admin/estadisticas"><i class="fas fa-chart-bar me-2"></i>Estadísticas</a></li>
+                    </ul>
+                </li>
+                <% } %>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/logout"><i class="fas fa-sign-out-alt me-1"></i>Salir</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenedor principal -->
+    <div class="container principal d-flex flex-column">
+        <!-- Mensaje de éxito -->
+        <% if (message) { %>
+            <div id="registro-exito" class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= message %>
+            </div>
+            <% delete message; %>
+        <% } %>
+
+        <!-- Lista de concesionarios -->
+        <div class="row">
+            <% concesionarios.forEach(concesionario => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" style="font-size:130%"><%= concesionario.nombre %></h5>
+                            <p><strong>Ciudad:</strong> <%= concesionario.ciudad %></p>
+                            <p><strong>Dirección:</strong> <%= concesionario.direccion %></p>
+                            <p><strong>Teléfono:</strong> <%= concesionario.telefono_contacto || 'No especificado' %></p>
+                            <!-- Botón para eliminar -->
+                            <button class="btn btn-danger btn-sm mt-2 eliminar-concesionario" data-bs-toggle="modal" data-bs-target="#modalEliminarConcesionario" data-id="<%= concesionario.id_concesionario %>">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- Botón para agregar concesionario -->
+        <div class="text-center mt-4">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarConcesionario">
+                Agregar Concesionario
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para agregar un nuevo concesionario -->
+    <div class="modal fade" id="modalAgregarConcesionario" tabindex="-1" aria-labelledby="modalAgregarConcesionarioLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarConcesionarioLabel">Agregar Nuevo Concesionario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="message-error" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                    </div>
+                    <form id="formAgregarConcesionario">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Concesionario <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ciudad" class="form-label">Ciudad <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" id="ciudad" name="ciudad" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label">Dirección <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telefono_contacto" class="form-label">Teléfono de Contacto</label>
+                            <input type="text" class="form-control" id="telefono_contacto" name="telefono_contacto">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar concesionario -->
+    <div class="modal fade" id="modalEliminarConcesionario" tabindex="-1" aria-labelledby="modalEliminarConcesionarioLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEliminarConcesionarioLabel" style="font-size:130%">¿Está seguro que desea eliminar este concesionario? <small>(Con ello se eliminarán todos los vehículos y usuarios asociados)</small></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="message-error2" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                    </div>
+                    <p id="nombre_concesionario_eliminar"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmar_eliminar" class="btn btn-danger">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de accesibilidad -->
+    <button id="accesibilidadBtn" class="btn btn-primary" onclick="toggleAccesibilidad()">Accesibilidad</button>
+
+    <div id="accesibilidadOptions" class="accesibilidad-options">
+        <h3>Opciones de Accesibilidad</h3>
+        <div>
+            <label for="colorPaleta">Paleta de Colores:</label>
+            <select id="colorPaleta" onchange="cambiarPaletaColores()">
+                <option value="default">Normal</option>
+                <option value="alto-contraste">Alto Contraste</option>
+                <option value="daltonismo">Daltonismo</option>
+            </select>
+        </div>
+        <div>
+            <label for="tamanoFuente">Tamaño de Fuente:</label>
+            <select id="tamanoFuente" onchange="ajustarTamanoFuente()">
+                <option value="pequeno">Pequeño (80%)</option>
+                <option value="normal" selected>Normal (100%)</option>
+                <option value="grande">Grande (120%)</option>
+            </select>
+        </div>
+        <hr>
+        <div>
+            <strong>Atajos de Teclado:</strong>
+            <ul style="font-size: 0.85rem; margin-top: 5px; padding-left: 20px;">
+                <li><kbd>Ctrl</kbd>+<kbd>R</kbd> -> Reservar vehículo</li>
+                <li><kbd>Ctrl</kbd>+<kbd>H</kbd> -> Mis reservas</li>
+                <li><kbd>Ctrl</kbd>+<kbd>D</kbd> -> Dashboard</li>
+                <li><kbd>Ctrl</kbd>+<kbd>P</kbd> -> Mi perfil</li>
+                <li><kbd>Ctrl</kbd>+<kbd>A</kbd> -> Accesibilidad</li>
+            </ul>
+        </div>
+    </div>  
+
+    <!-- Pie de página -->
+    <footer class="text-center py-2">
+        <p>&copy; 2025 Plataforma de Gestión de Flotas de Vehículos Eléctricos. Todos los derechos reservados.</p>
+        <p>
+            <a class="text-white">Política de Privacidad</a> |
+            <a class="text-white">Términos y Condiciones</a>
+        </p>
+    </footer>
+
+
+    <!-- Scripts de Bootstrap -->
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+
+    <script>
+
+    // Función de manejo del formulario de agregar concesionario
+    //Esto nos permite que através de la ruta, podamos devolver, en caso de que haya algún error, sin tener que refrescar la pagina, y cuando todo funcione,
+    //se recargará la ruta y mostrará un mensaje de éxito que se desvanecera a los 7 segundos. La mayoría de formularios en los que se necesitan avisos al 
+    //usuario, he optado por usar javascript, mostrando alertas de color rojo, muy intuitivas y con los diferentes mensajes que requiere.
+
+    document.getElementById('formAgregarConcesionario').addEventListener('submit', async function (event) {
+        event.preventDefault(); // Evita que el formulario se envíe de manera tradicional
+
+        // Obtiene los datos del formulario
+        const form_data = new FormData(this);
+        const response = await fetch('/admin/concesionarios/crear', {
+             method: 'POST',
+             body: form_data
+        });
+
+        const result = await response.json(); // Suponiendo que el servidor devuelve una respuesta en formato JSON
+
+        // Limpiar mensajes previos
+        document.getElementById('message-error').classList.add('d-none');
+
+        // Si la respuesta es exitosa
+        if (result.success) {
+            // Redirigir si fue exitoso
+            window.location.href = result.redirect;
+        } else {
+            // Si hay un error, mostrar el mensaje de error
+            document.getElementById('message-error').textContent = result.message_error;
+            document.getElementById('message-error').classList.remove('d-none');
+        }
+    });
+
+    const eliminar_buttons = document.querySelectorAll('.eliminar-concesionario');
+    const confirmar_eliminar_btn = document.getElementById('confirmar_eliminar');
+    let concesionario_id_eliminar = null;
+
+    // Configurar el evento para mostrar el modal y capturar el ID
+    eliminar_buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            concesionario_id_eliminar = button.getAttribute('data-id');
+            const nombre_concesionario = button.closest('.card-body').querySelector('.card-title').textContent;
+            document.getElementById('nombre_concesionario_eliminar').textContent = `Nombre: ${nombre_concesionario}`;
+        });
+    });
+
+    // Confirmar eliminación
+    confirmar_eliminar_btn.addEventListener('click', async () => {
+        if (!concesionario_id_eliminar) return;
+
+        try {
+            const response = await fetch(`/admin/concesionarios/eliminar/${concesionario_id_eliminar}`, {
+                method: 'DELETE',
+            });
+
+            const result = await response.json();
+
+            // Limpiar mensajes previos
+            document.getElementById('message-error2').classList.add('d-none');
+
+            if (result.success) {
+                window.location.href = result.redirect; // Redirige tras éxito
+            } else {
+                document.getElementById('message-error2').textContent = result.message_error;
+                document.getElementById('message-error2').classList.remove('d-none');
+            }
+        } catch (error) {
+            document.getElementById('message-error2').textContent = 'Hubo un error al procesar la solicitud.';
+        }
+    });
+
+    </script>
+
+</body>
+</html>

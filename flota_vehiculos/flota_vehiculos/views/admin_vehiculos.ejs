@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .card-img-top {
+            width: 100%;
+            display: block;
+        }
+
+        .card-body {
+            text-align: center;
+        }
+
+        .modal-content {
+            padding: 2.5vh;
+        }
+
+        .field-group {
+            margin-bottom: 1.8vh;
+        }
+
+        .field-group label {
+            font-weight: bold;
+        }
+
+        .vehiculos-container {
+            max-height: 80vh; 
+            overflow-y: auto; 
+        }
+
+        .btn-success{
+            background-color: green;
+        }
+    </style>
+</head>
+<body class="fade-in">
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+        <h4>Gestionar Vehículos (Admin)</h4>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vehiculos">Vehículos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mis_reservas">Mis Reservas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/vehiculos">Gestionar Vehículos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/concesionarios">Gestionar Concesionarios</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <section class="py-5"> 
+    <div class="container">
+        <div class="row vehiculos-container">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarVehiculo" style="margin-bottom: 2%;">Añadir Vehículo</button>
+            
+            <% if (message) { %>
+                <div id="registro-exito" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <%= message %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% delete message; %>
+            <% } %>
+            <% if (message_error) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <%= message_error %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <% delete message_error; %>
+            <% } %>
+
+            <% vehiculos.forEach(vehiculo => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <% if (vehiculo.imagen) { %>
+                            <img src="data:image/jpeg;base64,<%= vehiculo.imagen.toString('base64') %>" class="card-img-top" alt="<%= vehiculo.marca %> <%= vehiculo.modelo %>">
+                        <% } else { %>
+                            <img src="/images/no_vehicle_photo.jpg" class="card-img-top" alt="<%= vehiculo.marca %> <%= vehiculo.modelo %>">
+                        <% } %>
+                        <div class="card-body">
+                            <h5 class="card-title" style="font-size:130%"><%= vehiculo.marca %> <%= vehiculo.modelo %></h5>
+                            <p><strong>Matrícula:</strong> <%= vehiculo.matricula %></p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge bg-<%= vehiculo.estado === 'disponible' ? 'success' : vehiculo.estado === 'reservado' ? 'warning' : 'danger' %>">
+                                    <%= vehiculo.estado %>
+                                </span>
+                            </p>
+                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal-modificar-<%= vehiculo.id_vehiculo %>">Modificar</button>
+                            <button class="btn btn-danger eliminar-vehiculo" data-bs-toggle="modal" data-bs-target="#modalEliminarVehiculo" data-id="<%= vehiculo.id_vehiculo %>">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para modificar vehículo -->
+                <div class="modal fade" id="modal-modificar-<%= vehiculo.id_vehiculo %>" tabindex="-1" aria-labelledby="modalLabel-<%= vehiculo.id_vehiculo %>" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalLabel-<%= vehiculo.id_vehiculo %>">Modificar Vehículo - <%= vehiculo.marca %> <%= vehiculo.modelo %></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="modificarVehiculoForm-<%= vehiculo.id_vehiculo %>" class="modificar-vehiculo-form">
+                                    <div id="error-message-modificar-<%= vehiculo.id_vehiculo %>" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                                    </div>
+                            
+                                    <div class="form-group">
+                                        <label for="matricula">Matrícula <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="text" class="form-control" name="matricula" value="<%= vehiculo.matricula %>" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="marca">Marca <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="text" class="form-control" name="marca" value="<%= vehiculo.marca %>" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="modelo">Modelo <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="text" class="form-control" name="modelo" value="<%= vehiculo.modelo %>" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="anio_matriculacion">Año de Matriculación <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="number" class="form-control" name="anio_matriculacion" value="<%= vehiculo.anio_matriculacion %>" min="1900" max="2030" required>
+                                    </div>
+                                  
+                                    <div class="form-group">
+                                        <label for="numero_plazas">Número de Plazas <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="number" class="form-control" name="numero_plazas" value="<%= vehiculo.numero_plazas %>" min="1" max="9" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="autonomia_km">Autonomía (km) <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <input type="number" class="form-control" name="autonomia_km" value="<%= vehiculo.autonomia_km %>" min="0" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="color">Color</label>
+                                        <input type="text" class="form-control" name="color" value="<%= vehiculo.color %>">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="estado">Estado <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <select class="form-control" name="estado" required>
+                                            <option value="disponible" <%= vehiculo.estado === 'disponible' ? 'selected' : '' %>>Disponible</option>
+                                            <option value="reservado" <%= vehiculo.estado === 'reservado' ? 'selected' : '' %>>Reservado</option>
+                                            <option value="mantenimiento" <%= vehiculo.estado === 'mantenimiento' ? 'selected' : '' %>>Mantenimiento</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="id_concesionario">Concesionario <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                                        <select class="form-control" name="id_concesionario" required>
+                                            <% concesionarios.forEach(c => { %>
+                                                <option value="<%= c.id_concesionario %>" <%= vehiculo.id_concesionario === c.id_concesionario ? 'selected' : '' %>><%= c.nombre %> - <%= c.ciudad %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="imagen">Imagen del Vehículo</label>
+                                        <input type="file" class="form-control" name="imagen" accept="image/*">
+                                        <small class="form-text text-muted">No subas nada si no deseas cambiar la imagen.</small>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+    </section>
+
+    <!-- Modal para agregar nuevo vehículo -->
+    <div class="modal fade" id="modalAgregarVehiculo" tabindex="-1" aria-labelledby="modalAgregarVehiculoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarVehiculoLabel">Agregar Nuevo Vehículo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="error-message-agregar" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                    </div>
+                    <form id="agregarVehiculoForm">
+                        <div class="form-group">
+                            <label for="matricula">Matrícula <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" name="matricula" placeholder="1234-ABC" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="marca">Marca <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" name="marca" placeholder="Tesla" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modelo">Modelo <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="text" class="form-control" name="modelo" placeholder="Model 3" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="anio_matriculacion">Año de Matriculación <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="number" class="form-control" name="anio_matriculacion" placeholder="2023" min="1900" max="2030" required>
+                        </div>
+                      
+                        <div class="form-group">
+                            <label for="numero_plazas">Número de Plazas <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="number" class="form-control" name="numero_plazas" placeholder="5" min="1" max="9" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="autonomia_km">Autonomía (km) <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="number" class="form-control" name="autonomia_km" placeholder="450" min="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="color">Color</label>
+                            <input type="text" class="form-control" name="color" placeholder="Blanco">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_concesionario">Concesionario <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <select class="form-control" name="id_concesionario" required>
+                                <option value="">Selecciona un concesionario</option>
+                                <% concesionarios.forEach(c => { %>
+                                    <option value="<%= c.id_concesionario %>"><%= c.nombre %> - <%= c.ciudad %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imagen">Imagen del Vehículo</label>
+                            <input type="file" class="form-control" name="imagen" accept="image/*">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">Agregar Vehículo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar vehículo -->
+    <div class="modal fade" id="modalEliminarVehiculo" tabindex="-1" aria-labelledby="modalEliminarVehiculoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEliminarVehiculoLabel">¿Está seguro que desea eliminar este vehículo?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="message-error-eliminar" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+                    </div>
+                    <p id="nombre_vehiculo_eliminar"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmar_eliminar" class="btn btn-danger">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de accesibilidad -->
+    <button id="accesibilidadBtn" class="btn btn-primary" onclick="toggleAccesibilidad()">Accesibilidad</button>
+
+    <div id="accesibilidadOptions" class="accesibilidad-options">
+        <h3>Opciones de Accesibilidad</h3>
+        <div>
+            <label for="colorPaleta">Paleta de Colores:</label>
+            <select id="colorPaleta" onchange="cambiarPaletaColores()">
+                <option value="default">Normal</option>
+                <option value="alto-contraste">Alto Contraste</option>
+                <option value="daltonismo">Daltonismo</option>
+            </select>
+        </div>
+        <div>
+            <label for="tamanoFuente">Tamaño de Fuente:</label>
+            <select id="tamanoFuente" onchange="ajustarTamanoFuente()">
+                <option value="pequeno">Pequeño (80%)</option>
+                <option value="normal" selected>Normal (100%)</option>
+                <option value="grande">Grande (120%)</option>
+            </select>
+        </div>
+        <hr>
+        <div>
+            <strong>Atajos de Teclado:</strong>
+            <ul style="font-size: 0.85rem; margin-top: 5px; padding-left: 20px;">
+                <li><kbd>Ctrl</kbd>+<kbd>R</kbd> -> Reservar vehículo</li>
+                <li><kbd>Ctrl</kbd>+<kbd>H</kbd> -> Mis reservas</li>
+                <li><kbd>Ctrl</kbd>+<kbd>D</kbd> -> Dashboard</li>
+                <li><kbd>Ctrl</kbd>+<kbd>P</kbd> -> Mi perfil</li>
+                <li><kbd>Ctrl</kbd>+<kbd>A</kbd> -> Accesibilidad</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Pie de página -->
+    <footer class="text-center py-2">
+        <p>&copy; 2025 Plataforma de Gestión de Flotas de Vehículos Eléctricos. Todos los derechos reservados.</p>
+        <p>
+            <a class="text-white">Política de Privacidad</a> |
+            <a class="text-white">Términos y Condiciones</a>
+        </p>
+    </footer>
+
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+
+    <script> 
+
+    //
+    //ELIMINAR VEHÍCULO
+    //Esto nos permite que através de la ruta, podamos devolver, en caso de que haya algún error, sin tener que refrescar la pagina
+    //
+
+    const eliminar_buttons = document.querySelectorAll('.eliminar-vehiculo');
+    const confirmar_eliminar_btn = document.getElementById('confirmar_eliminar');
+    let vehiculo_id_eliminar = null;
+
+    eliminar_buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            vehiculo_id_eliminar = button.getAttribute('data-id');
+            const nombre_vehiculo = button.closest('.card-body').querySelector('.card-title').textContent;
+            document.getElementById('nombre_vehiculo_eliminar').textContent = `Vehículo: ${nombre_vehiculo}`;
+            // Limpiar mensaje de error anterior
+            document.getElementById('message-error-eliminar').classList.add('d-none');
+            document.getElementById('message-error-eliminar').textContent = '';
+        });
+    });
+
+    confirmar_eliminar_btn.addEventListener('click', async () => {
+        if (!vehiculo_id_eliminar) return;
+
+        try {
+            const response = await fetch(`/admin/vehiculos/eliminar/${vehiculo_id_eliminar}`, {
+                method: 'DELETE',
+            });
+
+            const result = await response.json();
+
+            document.getElementById('message-error-eliminar').classList.add('d-none');
+
+            if (result.success) {
+                window.location.href = result.redirect;
+            } else {
+                document.getElementById('message-error-eliminar').textContent = result.message_error;
+                document.getElementById('message-error-eliminar').classList.remove('d-none');
+            }
+        } catch (error) {
+            document.getElementById('message-error-eliminar').textContent = 'Hubo un error al procesar la solicitud.';
+            document.getElementById('message-error-eliminar').classList.remove('d-none');
+        }
+    });
+
+    //
+    //MODIFICAR VEHÍCULO
+    //
+
+    document.querySelectorAll('.modificar-vehiculo-form').forEach(form => {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const form_data = new FormData(this);
+            const vehiculo_id = this.id.split('-')[1];
+
+            try {
+                const response = await fetch(`/admin/vehiculos/modificar/${vehiculo_id}`, {
+                    method: 'POST',
+                    body: form_data
+                });
+
+                const result = await response.json();
+
+                document.getElementById(`error-message-modificar-${vehiculo_id}`).classList.add('d-none');
+
+                if (result.success) {
+                    window.location.href = result.redirect; 
+                } else {
+                    document.getElementById(`error-message-modificar-${vehiculo_id}`).textContent = result.message_error;
+                    document.getElementById(`error-message-modificar-${vehiculo_id}`).classList.remove('d-none');
+                }
+            } catch (error) {
+                document.getElementById(`error-message-modificar-${vehiculo_id}`).textContent = 'Hubo un error al procesar la solicitud.';
+                document.getElementById(`error-message-modificar-${vehiculo_id}`).classList.remove('d-none');
+            }
+        });
+    });
+
+    //
+    //AGREGAR VEHÍCULO
+    //
+
+    document.getElementById('agregarVehiculoForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        
+        const form_data = new FormData(this);
+        
+        const response = await fetch('/admin/vehiculos/crear', {
+            method: 'POST',
+            body: form_data
+        });
+        
+        const result = await response.json();
+
+        document.getElementById('error-message-agregar').classList.add('d-none');
+
+        if (result.success) {
+            window.location.href = result.redirect;
+        } else {
+            document.getElementById('error-message-agregar').textContent = result.message_error;
+            document.getElementById('error-message-agregar').classList.remove('d-none');
+        }
+    });
+
+    </script>
+
+</body>
+</html>

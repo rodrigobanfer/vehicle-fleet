@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehículos</title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <style>
+    
+    .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .card-img-top {
+        width: 100%;
+        display: block; 
+        margin-bottom: 0px;  
+    }
+
+    .card-body {
+        text-align: center;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        margin-bottom: 10px;
+    }
+
+    .card-text {
+        margin-bottom: 10px;
+    }
+
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+
+    .principal {
+        display: flex;
+        justify-content: center;
+        min-height: 85%; 
+    }
+
+    .filtros-panel {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .filtros-panel h5 {
+        color: var(--tercer-color);
+        margin-bottom: 15px;
+    }
+
+    .filtro-grupo {
+        margin-bottom: 10px;
+    }
+
+    .btn-limpiar {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    </style>
+</head>
+<body class="fade-in">
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+        <h4>Vehículos</h4>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vehiculos">Vehículos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mis_reservas">Mis Reservas</a>
+                </li>
+                <% if (rol=='admin') { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/vehiculos">Gestionar Vehículos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/concesionarios">Gestionar Concesionarios</a>
+                    </li>
+                <% } %>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container principal d-flex flex-column">
+        <!-- Mensaje de éxito -->
+        <% if (message) { %>
+            <div id="registro-exito" class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= message %>
+            </div>
+            <% delete message; %>
+        <% } %>
+        <% if (message_error) { %>
+            <div id="registro-exito" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= message_error %>
+            </div>
+            <% delete message_error; %>
+        <% } %>
+
+        <!-- Panel de Filtros Avanzados -->
+        <div class="filtros-panel">
+            <h5>🔍 Filtros Avanzados</h5>
+            <div class="row">
+                <div class="col-md-3 filtro-grupo">
+                    <label for="filtroAutonomia">Autonomía mínima (km):</label>
+                    <input type="number" class="form-control" id="filtroAutonomia" placeholder="Ej: 300" min="0">
+                </div>
+                <div class="col-md-3 filtro-grupo">
+                    <label for="filtroPlazas">Número de plazas:</label>
+                    <select class="form-control" id="filtroPlazas">
+                        <option value="">Todas</option>
+                        <option value="2">2 plazas</option>
+                        <option value="4">4 plazas</option>
+                        <option value="5">5 plazas</option>
+                        <option value="7">7 plazas</option>
+                    </select>
+                </div>
+                <div class="col-md-3 filtro-grupo">
+                    <label for="filtroColor">Color:</label>
+                    <select class="form-control" id="filtroColor">
+                        <option value="">Todos</option>
+                        <% 
+                        const colores = [...new Set(vehiculos.map(v => v.color).filter(c => c))];
+                        colores.forEach(color => { %>
+                            <option value="<%= color %>"><%= color %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="col-md-3 filtro-grupo d-flex align-items-end">
+                    <button class="btn btn-limpiar w-100" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                </div>
+            </div>
+            <div class="mt-2">
+                <small id="contadorResultados" class="text-muted">Mostrando todos los vehículos</small>
+            </div>
+        </div>
+
+        <!-- Botones para cada concesionario -->
+        <div class="row" id="botonesConcesionarios">
+            <% concesionarios.forEach(concesionario => { %>
+                <div class="col-md-4 mb-4">
+                    <button class="btn btn-primary w-100 btn-concesionario" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modal-<%= concesionario.id_concesionario %>"
+                            data-concesionario-id="<%= concesionario.id_concesionario %>">
+                        <%= concesionario.nombre %> - <%= concesionario.ciudad %>
+                        <span class="badge bg-light text-dark ms-2 contador-concesionario" data-concesionario="<%= concesionario.id_concesionario %>">
+                            <%= vehiculos.filter(v => v.id_concesionario === concesionario.id_concesionario && v.estado !== 'mantenimiento').length %>
+                        </span>
+                    </button>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Modales para cada concesionario -->
+    <% concesionarios.forEach(concesionario => { %>
+        <div class="modal fade" id="modal-<%= concesionario.id_concesionario %>" tabindex="-1" aria-labelledby="modalLabel-<%= concesionario.id_concesionario %>" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel-<%= concesionario.id_concesionario %>"><%= concesionario.nombre %> - Vehículos</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body vehiculos-container" data-concesionario="<%= concesionario.id_concesionario %>">
+                        <div class="row vehiculos-grid">
+                            <% const vehiculosConcesionario = vehiculos.filter(v => v.id_concesionario === concesionario.id_concesionario); %>
+                            <% if (vehiculosConcesionario.length > 0) { %>
+                                <% vehiculosConcesionario.forEach(vehiculo => { %>
+                                    <div class="col-md-4 mb-4 vehiculo-card" 
+                                         data-autonomia="<%= vehiculo.autonomia_km %>" 
+                                         data-plazas="<%= vehiculo.numero_plazas %>" 
+                                         data-color="<%= vehiculo.color %>"
+                                         data-estado="<%= vehiculo.estado %>">
+                                        <div class="card">
+                                            <% if (vehiculo.imagen) { %>
+                                                <img src="data:image/jpeg;base64,<%= vehiculo.imagen.toString('base64') %>" class="card-img-top" alt="<%= vehiculo.marca %> <%= vehiculo.modelo %>">
+                                            <% } else { %>
+                                                <img src="/images/no_vehicle_photo.jpg" class="card-img-top" alt="<%= vehiculo.marca %> <%= vehiculo.modelo %>">
+                                            <% } %>
+                                            <div class="card-body">
+                                                <h5 class="card-title"><%= vehiculo.marca %> <%= vehiculo.modelo %></h5>
+                                                <p class="card-text">
+                                                    <strong>Matrícula:</strong> <%= vehiculo.matricula %>
+                                                </p>
+                                                <p class="card-text">
+                                                    <strong>Año:</strong> <%= vehiculo.anio_matriculacion %>
+                                                </p>
+                                                <p class="card-text">
+                                                    <strong>Plazas:</strong> <%= vehiculo.numero_plazas %>
+                                                </p>
+                                                <p class="card-text">
+                                                    <strong>Autonomía:</strong> <%= vehiculo.autonomia_km %> km
+                                                </p>
+                                                <p class="card-text">
+                                                    <strong>Color:</strong> <%= vehiculo.color %>
+                                                </p>
+                                                <p class="card-text">
+                                                    <strong>Estado:</strong> 
+                                                    <span class="badge bg-<%= vehiculo.estado === 'mantenimiento' ? 'danger' : 'success' %>">
+                                                        <%= vehiculo.estado === 'mantenimiento' ? 'mantenimiento' : 'disponible' %>
+                                                    </span>
+                                                </p>
+                                                <% if (vehiculo.reservas_activas && vehiculo.reservas_activas.length > 0) { %>
+                                                    <p class="card-text">
+                                                        <small class="text-muted">
+                                                            <strong>Reservado:</strong><br>
+                                                            <% vehiculo.reservas_activas.forEach(reserva => { %>
+                                                                <% 
+                                                                    const fechaInicio = new Date(reserva.fecha_inicio);
+                                                                    const fechaFin = new Date(reserva.fecha_fin);
+                                                                    const opciones = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+                                                                    const inicioStr = fechaInicio.toLocaleString('es-ES', opciones);
+                                                                    const finStr = fechaFin.toLocaleString('es-ES', opciones);
+                                                                %>
+                                                                Del <%= inicioStr %> al <%= finStr %><br>
+                                                            <% }) %>
+                                                        </small>
+                                                    </p>
+                                                <% } %>
+                                                <% if (vehiculo.estado !== 'mantenimiento') { %>
+                                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalReserva-<%= vehiculo.id_vehiculo %>">Reservar</button>
+                                                <% } else { %>
+                                                    <button class="btn btn-secondary" disabled>En mantenimiento</button>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <p class="no-vehiculos">No hay vehículos en este concesionario.</p>
+                            <% } %>
+                        </div>
+                        <p class="sin-resultados text-center text-muted d-none">No hay vehículos que coincidan con los filtros.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% }) %>
+
+    <!-- Modales de reserva para cada vehículo que no esté en mantenimiento -->
+    <% vehiculos.filter(v => v.estado !== 'mantenimiento').forEach(vehiculo => { %>
+        <div class="modal fade" id="modalReserva-<%= vehiculo.id_vehiculo %>" tabindex="-1" aria-labelledby="modalReservaLabel-<%= vehiculo.id_vehiculo %>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalReservaLabel-<%= vehiculo.id_vehiculo %>">RESERVAR VEHÍCULO</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="error-message-reserva-<%= vehiculo.id_vehiculo %>" class="alert alert-danger d-none"></div>
+
+                        <p><strong>Vehículo:</strong> <%= vehiculo.marca %> <%= vehiculo.modelo %></p>
+                        <p><strong>Matrícula:</strong> <%= vehiculo.matricula %></p>
+                        
+                        <% if (vehiculo.reservas_activas && vehiculo.reservas_activas.length > 0) { %>
+                            <div class="alert alert-warning">
+                                <strong>Fechas ya reservadas:</strong><br>
+                                <% vehiculo.reservas_activas.forEach(reserva => { %>
+                                    <% 
+                                        const fechaInicioModal = new Date(reserva.fecha_inicio);
+                                        const fechaFinModal = new Date(reserva.fecha_fin);
+                                        const inicioStrModal = fechaInicioModal.getFullYear() + '-' + String(fechaInicioModal.getMonth()+1).padStart(2,'0') + '-' + String(fechaInicioModal.getDate()).padStart(2,'0');
+                                        const finStrModal = fechaFinModal.getFullYear() + '-' + String(fechaFinModal.getMonth()+1).padStart(2,'0') + '-' + String(fechaFinModal.getDate()).padStart(2,'0');
+                                    %>
+                                    Del <%= inicioStrModal %> al <%= finStrModal %><br>
+                                <% }) %>
+                            </div>
+                        <% } %>
+
+                        <form id="reservaForm-<%= vehiculo.id_vehiculo %>" class="reservaForm">
+                            <input type="hidden" name="id_vehiculo" value="<%= vehiculo.id_vehiculo %>">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="fecha_inicio_<%= vehiculo.id_vehiculo %>">Fecha de inicio</label>
+                                        <input type="date" class="form-control fecha-inicio-date" id="fecha_inicio_<%= vehiculo.id_vehiculo %>" name="fecha_inicio_date" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="hora_inicio_<%= vehiculo.id_vehiculo %>">Hora de inicio</label>
+                                        <input type="time" class="form-control hora-inicio" id="hora_inicio_<%= vehiculo.id_vehiculo %>" name="hora_inicio" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="fecha_fin_<%= vehiculo.id_vehiculo %>">Fecha de fin</label>
+                                        <input type="date" class="form-control fecha-fin-date" id="fecha_fin_<%= vehiculo.id_vehiculo %>" name="fecha_fin_date" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="hora_fin_<%= vehiculo.id_vehiculo %>">Hora de fin</label>
+                                        <input type="time" class="form-control hora-fin" id="hora_fin_<%= vehiculo.id_vehiculo %>" name="hora_fin" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success mt-3">Confirmar Reserva</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% }) %>
+
+    <!-- Botón de accesibilidad -->
+    <button id="accesibilidadBtn" class="btn btn-primary" onclick="toggleAccesibilidad()">Accesibilidad</button>
+
+    <!-- Opciones de Accesibilidad -->
+    <div id="accesibilidadOptions" class="accesibilidad-options">
+        <h3>Opciones de Accesibilidad</h3>
+        <div>
+            <label for="colorPaleta">Cambio de Paleta de Colores:</label>
+            <select id="colorPaleta" onchange="cambiarPaletaColores()">
+                <option value="default">Normal</option>
+                <option value="alto-contraste">Alto Contraste</option>
+                <option value="daltonismo">Daltonismo</option>
+            </select>
+        </div>
+        <div>
+            <label for="tamanoFuente">Tamaño de Fuente:</label>
+            <input type="range" id="tamanoFuente" min="12" max="24" value="16" onchange="ajustarTamanoFuente()" />
+        </div>
+        <div>
+            <label for="navegacionTeclado">Navegación por Teclado:</label>
+            <input type="checkbox" id="navegacionTeclado" onchange="toggleNavegacionTeclado()" />
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center py-2">
+        <p>&copy; 2025 Plataforma de Gestión de Flotas de Vehículos Eléctricos. Todos los derechos reservados.</p>
+        <p>
+            <a class="text-white">Política de Privacidad</a> |
+            <a class="text-white">Términos y Condiciones</a>
+        </p>
+    </footer>
+
+    <!-- Scripts de Bootstrap -->
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+
+    <script>
+    
+    //Configuramos la fecha mínima como hoy para todos los campos de fecha
+    document.addEventListener('DOMContentLoaded', function() {
+        const hoy = new Date().toISOString().split('T')[0];
+        
+        document.querySelectorAll('.fecha-inicio-date').forEach(function(input) {
+            input.setAttribute('min', hoy);
+        });
+        document.querySelectorAll('.fecha-fin-date').forEach(function(input) {
+            input.setAttribute('min', hoy);
+        });
+        
+        // Cuando cambia fecha inicio, actualizar mínimo de fecha fin
+        document.querySelectorAll('.fecha-inicio-date').forEach(function(input) {
+            input.addEventListener('change', function() {
+                const idVehiculo = this.id.replace('fecha_inicio_', '');
+                const fechaFinInput = document.getElementById('fecha_fin_' + idVehiculo);
+                if (fechaFinInput && this.value) {
+                    fechaFinInput.setAttribute('min', this.value);
+                    // Si fecha fin es menor que fecha inicio, limpiarla
+                    if (fechaFinInput.value && fechaFinInput.value < this.value) {
+                        fechaFinInput.value = '';
+                    }
+                }
+            });
+        });
+    });
+
+    //
+    //FILTROS AVANZADOS
+    //Filtramos los vehículos dinámicamente sin recargar la página
+    //
+
+    const filtroAutonomia = document.getElementById('filtroAutonomia');
+    const filtroPlazas = document.getElementById('filtroPlazas');
+    const filtroColor = document.getElementById('filtroColor');
+
+    //Añadimos eventos a los filtros
+    filtroAutonomia.addEventListener('input', aplicarFiltros);
+    filtroPlazas.addEventListener('change', aplicarFiltros);
+    filtroColor.addEventListener('change', aplicarFiltros);
+
+    function aplicarFiltros() {
+        const autonomiaMin = parseInt(filtroAutonomia.value) || 0;
+        const plazas = filtroPlazas.value;
+        const color = filtroColor.value.toLowerCase();
+
+        let totalVisibles = 0;
+        let contadoresPorConcesionario = {};
+
+        //Recorremos todas las tarjetas de vehículos
+        document.querySelectorAll('.vehiculo-card').forEach(function(card) {
+            const cardAutonomia = parseInt(card.dataset.autonomia) || 0;
+            const cardPlazas = card.dataset.plazas;
+            const cardColor = (card.dataset.color || '').toLowerCase();
+            const cardEstado = card.dataset.estado;
+
+            //Comprobamos si cumple todos los filtros
+            let cumpleFiltros = true;
+
+            if (autonomiaMin > 0 && cardAutonomia < autonomiaMin) {
+                cumpleFiltros = false;
+            }
+
+            if (plazas && cardPlazas !== plazas) {
+                cumpleFiltros = false;
+            }
+
+            if (color && cardColor !== color) {
+                cumpleFiltros = false;
+            }
+
+            //Mostramos u ocultamos la tarjeta
+            if (cumpleFiltros) {
+                card.style.display = '';
+                totalVisibles++;
+
+                //Contamos por concesionario (solo los que no están en mantenimiento)
+                const concesionario = card.closest('.vehiculos-container').dataset.concesionario;
+                if (cardEstado !== 'mantenimiento') {
+                    contadoresPorConcesionario[concesionario] = (contadoresPorConcesionario[concesionario] || 0) + 1;
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        //Actualizamos el mensaje de sin resultados en cada modal
+        document.querySelectorAll('.vehiculos-container').forEach(function(container) {
+            const visibles = container.querySelectorAll('.vehiculo-card:not([style*="display: none"])').length;
+            const sinResultados = container.querySelector('.sin-resultados');
+            const grid = container.querySelector('.vehiculos-grid');
+            
+            if (visibles === 0) {
+                if (sinResultados) sinResultados.classList.remove('d-none');
+                if (grid) grid.style.display = 'none';
+            } else {
+                if (sinResultados) sinResultados.classList.add('d-none');
+                if (grid) grid.style.display = '';
+            }
+        });
+
+        //Actualizamos contadores en los botones de concesionarios
+        document.querySelectorAll('.contador-concesionario').forEach(function(badge) {
+            const concesionarioId = badge.dataset.concesionario;
+            badge.textContent = contadoresPorConcesionario[concesionarioId] || 0;
+        });
+
+        //Actualizamos el contador general
+        const contadorResultados = document.getElementById('contadorResultados');
+        if (autonomiaMin > 0 || plazas || color) {
+            contadorResultados.textContent = `Mostrando ${totalVisibles} vehículo(s) con los filtros aplicados`;
+        } else {
+            contadorResultados.textContent = 'Mostrando todos los vehículos';
+        }
+    }
+
+    function limpiarFiltros() {
+        filtroAutonomia.value = '';
+        filtroPlazas.value = '';
+        filtroColor.value = '';
+        aplicarFiltros();
+    }
+
+    //
+    //FORMULARIOS DE RESERVA
+    //
+
+    document.querySelectorAll('.reservaForm').forEach(function(form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const idVehiculo = formData.get('id_vehiculo');
+
+            const response = await fetch('/reservar', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            //Limpiar mensajes previos
+            document.getElementById('error-message-reserva-' + idVehiculo).classList.add('d-none');
+
+            if (result.success) {
+                window.location.href = result.redirect;
+            } else {
+                document.getElementById('error-message-reserva-' + idVehiculo).textContent = result.message_error;
+                document.getElementById('error-message-reserva-' + idVehiculo).classList.remove('d-none');
+            }
+        });
+    });
+
+    </script>
+
+</body>
+</html>

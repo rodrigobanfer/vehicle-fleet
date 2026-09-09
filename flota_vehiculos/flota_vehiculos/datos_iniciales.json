@@ -1,0 +1,108 @@
+{
+  "concesionarios": [
+    {
+      "nombre": "Concesionario Central Madrid",
+      "ciudad": "Madrid",
+      "direccion": "Calle Gran Via 45",
+      "telefono_contacto": "+34 915551234"
+    },
+    {
+      "nombre": "Concesionario Norte Barcelona",
+      "ciudad": "Barcelona",
+      "direccion": "Avenida Diagonal 123",
+      "telefono_contacto": "+34 934567890"
+    },
+    {
+      "nombre": "Concesionario Sur Sevilla",
+      "ciudad": "Sevilla",
+      "direccion": "Calle Sierpes 78",
+      "telefono_contacto": "+34 954123456"
+    }
+  ],
+  "vehiculos": [
+    {
+      "matricula": "1234-ABC",
+      "marca": "Tesla",
+      "modelo": "Model 3",
+      "anio_matriculacion": 2023,
+      "numero_plazas": 5,
+      "autonomia_km": 490,
+      "color": "Blanco",
+      "imagen_local": "tesla1.png",
+      "estado": "disponible",
+      "id_concesionario": 1
+    },
+    {
+      "matricula": "5678-DEF",
+      "marca": "Tesla",
+      "modelo": "Model Y",
+      "anio_matriculacion": 2023,
+      "numero_plazas": 5,
+      "autonomia_km": 450,
+      "color": "Negro",
+      "imagen_local": "tesla2.png",
+      "estado": "disponible",
+      "id_concesionario": 1
+    },
+    {
+      "matricula": "9012-GHI",
+      "marca": "Volkswagen",
+      "modelo": "Leaf",
+      "anio_matriculacion": 2022,
+      "numero_plazas": 5,
+      "autonomia_km": 270,
+      "color": "Azul",
+      "imagen_local": "VW1.png",
+      "estado": "disponible",
+      "id_concesionario": 2
+    },
+    {
+      "matricula": "7890-MNO",
+      "marca": "Volkswagen",
+      "modelo": "ID.4",
+      "anio_matriculacion": 2023,
+      "numero_plazas": 5,
+      "autonomia_km": 520,
+      "color": "Rojo",
+      "imagen_local": "VW2.png",
+      "estado": "disponible",
+      "id_concesionario": 3
+    },
+    {
+      "matricula": "3456-JKL",
+      "marca": "BYD",
+      "modelo": "i3",
+      "anio_matriculacion": 2022,
+      "numero_plazas": 4,
+      "autonomia_km": 310,
+      "color": "Gris",
+      "imagen_local": "byd_seal1.png",
+      "estado": "disponible",
+      "id_concesionario": 2
+    },
+    {
+      "matricula": "6789-STU",
+      "marca": "BYD",
+      "modelo": "EV6",
+      "anio_matriculacion": 2022,
+      "numero_plazas": 5,
+      "autonomia_km": 510,
+      "color": "Blanco",
+      "imagen_local": "byd_seal2.png",
+      "estado": "disponible",
+      "id_concesionario": 3
+    },
+    {
+      "matricula": "1122-VLV",
+      "marca": "Volvo",
+      "modelo": "XC40 Recharge",
+      "anio_matriculacion": 2023,
+      "numero_plazas": 5,
+      "autonomia_km": 420,
+      "color": "Plateado",
+      "imagen_local": "volvo1.png",
+      "estado": "disponible",
+      "id_concesionario": 1
+    }
+  ]
+}

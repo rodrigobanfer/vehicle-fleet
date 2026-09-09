@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=title%></title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="fade-in">
+
+    <!-- Navbar simple para página de login -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="/">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+        <h4>Gestión de Flotas de Vehículos Eléctricos</h4>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    
+    <section class="botones-indice">
+        <% if (message) { %>
+            <div id="registro-exito" class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= message %>
+            </div>
+        <% } %>
+        <% if (message_error) { %>
+            <div id="registro-exito" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= message_error %>
+            </div>
+        <% } %>
+        <button type="button" class="btn btn-primary pulse" data-bs-toggle="modal" data-bs-target="#loginModal">
+            Iniciar Sesión
+        </button>
+      
+        <button type="button" class="btn btn-success pulse" data-bs-toggle="modal" data-bs-target="#registerModal">
+            Registrarse
+        </button>
+    </section>
+
+    <!-- Modal de Inicio de Sesión -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">INICIO DE SESIÓN</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="error-message-login" class="alert alert-danger mt-3 d-none"></div>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico Corporativo <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="email" class="form-control" id="email" name="correo" placeholder="nombre@ucm.es" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="password" class="form-control" id="password" name="contrasena" placeholder="Contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro -->
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">REGISTRO</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="error-message-register" class="alert alert-danger mt-3 d-none"></div>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="nombre">Nombre Completo <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i> <small>(Sin números ni caracteres)</small></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre Completo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registro-email">Correo Electrónico Corporativo <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <input type="email" class="form-control" id="registro-email" name="correo" placeholder="nombre@ucm.es" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono de Contacto</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" pattern="[0-9]{9}" maxlength="9" minlength="9" required>
+                            <small class="text-muted">9 dígitos</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="concesionario">Concesionario <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i></label>
+                            <select class="form-control" id="concesionario" name="id_concesionario" required>
+                                <option value="">Selecciona tu Concesionario</option>
+                                <% concesionarios.forEach(concesionario => { %>
+                                    <option value="<%= concesionario.id_concesionario %>"><%= concesionario.nombre %> - <%= concesionario.ciudad %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="registro-password">Contraseña <i class="fa fa-asterisk custom-asterisco" aria-hidden="true"></i> <small>(Mín. 8 caracteres, 1 mayúscula, 1 número)</small></label>
+                            <input type="password" class="form-control" id="registro-password" name="contrasena" placeholder="Contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Registrarse</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de accesibilidad -->
+    <button id="accesibilidadBtn" class="btn btn-primary" onclick="toggleAccesibilidad()">Accesibilidad</button>
+
+    <div id="accesibilidadOptions" class="accesibilidad-options">
+        <h3>Opciones de Accesibilidad</h3>
+        <div>
+            <label for="colorPaleta">Paleta de Colores:</label>
+            <select id="colorPaleta" onchange="cambiarPaletaColores()">
+                <option value="default">Normal</option>
+                <option value="alto-contraste">Alto Contraste</option>
+                <option value="daltonismo">Daltonismo</option>
+            </select>
+        </div>
+        <div>
+            <label for="tamanoFuente">Tamaño de Fuente:</label>
+            <select id="tamanoFuente" onchange="ajustarTamanoFuente()">
+                <option value="pequeno">Pequeño (80%)</option>
+                <option value="normal" selected>Normal (100%)</option>
+                <option value="grande">Grande (120%)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center py-2">
+        <p>&copy; 2025 Plataforma de Gestión de Flotas de Vehículos Eléctricos. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+
+    <script>
+    document.getElementById('registerForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        const response = await fetch('/register', {
+             method: 'POST',
+             body: formData
+        });
+        const result = await response.json();
+        document.getElementById('error-message-register').classList.add('d-none');
+        if (result.success) {
+            window.location.href = result.redirect;
+        } else {
+            document.getElementById('error-message-register').textContent = result.message_error;
+            document.getElementById('error-message-register').classList.remove('d-none');
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        const response = await fetch('/login', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        document.getElementById('error-message-login').classList.add('d-none');
+        if (result.success) {
+            window.location.href = result.redirect;
+        } else {
+            document.getElementById('error-message-login').textContent = result.message_error;
+            document.getElementById('error-message-login').classList.remove('d-none');
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const successMessage = document.getElementById("registro-exito");
+        if (successMessage) {
+            setTimeout(function() {
+                successMessage.classList.remove("show");
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 500);
+            }, 6000);
+        }
+    });
+    </script>
+
+</body>
+</html>

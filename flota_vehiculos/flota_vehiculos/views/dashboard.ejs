@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - <%= user.nombre %></title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="fade-in">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="/dashboard">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard"><i class="fas fa-home me-1"></i>Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/vehiculos"><i class="fas fa-car me-1"></i>Vehículos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mis_reservas"><i class="fas fa-calendar-alt me-1"></i>Mis Reservas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/perfil"><i class="fas fa-user me-1"></i>Perfil</a>
+                </li>
+                <% if (user.rol === 'admin') { %>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cogs me-1"></i>Administración
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/admin/vehiculos"><i class="fas fa-car-side me-2"></i>Gestión Vehículos</a></li>
+                        <li><a class="dropdown-item" href="/admin/concesionarios"><i class="fas fa-building me-2"></i>Gestión Concesionarios</a></li>
+                        <li><a class="dropdown-item" href="/admin/usuarios"><i class="fas fa-users me-2"></i>Gestión Usuarios</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/cargar_json"><i class="fas fa-file-import me-2"></i>Cargar JSON</a></li>
+                        <li><a class="dropdown-item" href="/admin/estadisticas"><i class="fas fa-chart-bar me-2"></i>Estadísticas</a></li>
+                    </ul>
+                </li>
+                <% } %>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/logout"><i class="fas fa-sign-out-alt me-1"></i>Salir</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="container mt-4">
+        
+        <!-- Mensajes de éxito o error -->
+        <% if (message) { %>
+            <div id="registro-exito" class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= message %>
+            </div>
+        <% } %>
+        
+        <% if (message_error) { %>
+            <div id="registro-exito" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= message_error %>
+            </div>
+        <% } %>
+
+        <!-- ALERTAS AUTOMÁTICAS -->
+        <% if (vehiculosAutonomiaBaja && vehiculosAutonomiaBaja.length > 0) { %>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>Alerta de Autonomía Baja:</strong> 
+                Hay <%= vehiculosAutonomiaBaja.length %> vehículo(s) con autonomía inferior a 300 km:
+                <ul class="mb-0 mt-2">
+                    <% vehiculosAutonomiaBaja.forEach(v => { %>
+                        <li><%= v.marca %> <%= v.modelo %> (<%= v.matricula %>) - <strong><%= v.autonomia_km %> km</strong></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <% if (reservasProximas && reservasProximas.length > 0) { %>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <strong>Recordatorio de Devolución:</strong> 
+                Tienes <%= reservasProximas.length %> reserva(s) que finalizan pronto:
+                <ul class="mb-0 mt-2">
+                    <% reservasProximas.forEach(r => { %>
+                        <% 
+                            const fechaFin = new Date(r.fecha_fin);
+                            const fechaFinStr = fechaFin.getFullYear() + '-' + String(fechaFin.getMonth()+1).padStart(2,'0') + '-' + String(fechaFin.getDate()).padStart(2,'0');
+                        %>
+                        <li><%= r.marca %> <%= r.modelo %> (<%= r.matricula %>) - Devolución: <strong><%= fechaFinStr %></strong></li>
+                    <% }) %>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <!-- Cabecera del Dashboard -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2>¡Bienvenido, <%= user.nombre %>!</h2>
+                <p class="text-muted">
+                    <% if (user.rol === 'admin') { %>
+                        <span class="badge bg-danger">Administrador</span>
+                    <% } else { %>
+                        <span class="badge bg-primary">Empleado</span>
+                    <% } %>
+                    - Concesionario: <%= concesionario ? concesionario.nombre : 'No asignado' %>
+                </p>
+            </div>
+        </div>
+
+        <!-- Tarjetas de resumen -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-car fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Vehículos Disponibles</h5>
+                        <h2 class="text-primary"><%= vehiculosDisponibles %></h2>
+                        <a href="/vehiculos" class="btn btn-outline-primary mt-2">Ver Vehículos</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Mis Reservas Activas</h5>
+                        <h2 class="text-success"><%= reservasActivas %></h2>
+                        <a href="/mis_reservas" class="btn btn-outline-success mt-2">Ver Reservas</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-history fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Historial Total</h5>
+                        <h2 class="text-info"><%= totalReservas %></h2>
+                        <a href="/mis_reservas" class="btn btn-outline-info mt-2">Ver Historial</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% if (user.rol === 'admin') { %>
+        <!-- Panel de Administración -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4><i class="fas fa-cog me-2"></i>Panel de Administración</h4>
+                <hr>
+            </div>
+            <div class="col-md-4 col-lg-2 mb-3">
+                <div class="card text-center h-100 bg-light">
+                    <div class="card-body">
+                        <i class="fas fa-car-side fa-2x text-secondary mb-2"></i>
+                        <h6>Gestionar Vehículos</h6>
+                        <a href="/admin/vehiculos" class="btn btn-sm btn-secondary">Acceder</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2 mb-3">
+                <div class="card text-center h-100 bg-light">
+                    <div class="card-body">
+                        <i class="fas fa-building fa-2x text-secondary mb-2"></i>
+                        <h6>Gestionar Concesionarios</h6>
+                        <a href="/admin/concesionarios" class="btn btn-sm btn-secondary">Acceder</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2 mb-3">
+                <div class="card text-center h-100 bg-light">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x text-secondary mb-2"></i>
+                        <h6>Gestionar Usuarios</h6>
+                        <a href="/admin/usuarios" class="btn btn-sm btn-secondary">Acceder</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2 mb-3">
+                <div class="card text-center h-100 bg-light">
+                    <div class="card-body">
+                        <i class="fas fa-chart-bar fa-2x text-secondary mb-2"></i>
+                        <h6>Estadísticas</h6>
+                        <a href="/admin/estadisticas" class="btn btn-sm btn-secondary">Acceder</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2 mb-3">
+                <div class="card text-center h-100 bg-light">
+                    <div class="card-body">
+                        <i class="fas fa-upload fa-2x text-secondary mb-2"></i>
+                        <h6>Cargar JSON</h6>
+                        <a href="/admin/cargar_json" class="btn btn-sm btn-secondary">Acceder</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+    </main>
+
+    <!-- Botón de accesibilidad -->
+    <button id="accesibilidadBtn" class="btn btn-primary" onclick="toggleAccesibilidad()">Accesibilidad</button>
+
+    <div id="accesibilidadOptions" class="accesibilidad-options">
+        <h3>Opciones de Accesibilidad</h3>
+        <div>
+            <label for="colorPaleta">Paleta de Colores:</label>
+            <select id="colorPaleta" onchange="cambiarPaletaColores()">
+                <option value="default">Normal</option>
+                <option value="alto-contraste">Alto Contraste</option>
+                <option value="daltonismo">Daltonismo</option>
+            </select>
+        </div>
+        <div>
+            <label for="tamanoFuente">Tamaño de Fuente:</label>
+            <select id="tamanoFuente" onchange="ajustarTamanoFuente()">
+                <option value="pequeno">Pequeño (80%)</option>
+                <option value="normal" selected>Normal (100%)</option>
+                <option value="grande">Grande (120%)</option>
+            </select>
+        </div>
+        <hr>
+        <div>
+            <strong>Atajos de Teclado:</strong>
+            <ul style="font-size: 0.85rem; margin-top: 5px; padding-left: 20px;">
+                <li><kbd>Ctrl</kbd>+<kbd>R</kbd> -> Reservar vehículo</li>
+                <li><kbd>Ctrl</kbd>+<kbd>H</kbd> -> Mis reservas</li>
+                <li><kbd>Ctrl</kbd>+<kbd>D</kbd> -> Dashboard</li>
+                <li><kbd>Ctrl</kbd>+<kbd>P</kbd> -> Mi perfil</li>
+                <li><kbd>Ctrl</kbd>+<kbd>A</kbd> -> Accesibilidad</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center py-2">
+        <p>&copy; 2025 Plataforma de Gestión de Flotas de Vehículos Eléctricos. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script src="/javascripts/main.js"></script>
+
+    <script>
+    //Desvanecer mensajes de alerta a los 6 segundos
+    document.addEventListener("DOMContentLoaded", function() {
+        const successMessage = document.getElementById("registro-exito");
+        if (successMessage) {
+            setTimeout(function() {
+                successMessage.classList.remove("show");
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 500);
+            }, 6000);
+        }
+    });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Inicial - Flota Vehículos</title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <style>
+        .setup-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .setup-card {
+            max-width: 700px;
+            width: 100%;
+        }
+        .card-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .upload-zone {
+            border: 3px dashed var(--primary-color);
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(14, 165, 233, 0.05);
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #22d3ee;
+            background: rgba(14, 165, 233, 0.15);
+        }
+        .upload-icon {
+            font-size: 5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .log-container {
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: #0f172a;
+            color: #22c55e;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            font-size: 0.9rem;
+        }
+        .log-entry { margin-bottom: 3px; }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #eab308; }
+        .log-info { color: #0ea5e9; }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-card">
+            <div class="card">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2><i class="fas fa-car-side me-2"></i>Flota de Vehículos Eléctricos</h2>
+                    <p class="mb-0">Configuración Inicial del Sistema</p>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>¡Bienvenido!</strong> La base de datos está vacía. Para comenzar, carga un archivo JSON con los concesionarios y vehículos.
+                    </div>
+
+                    <!-- Zona de carga -->
+                    <div class="upload-zone mb-4" id="uploadZone" onclick="document.getElementById('jsonFile').click()">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h4>Arrastra tu archivo JSON aquí</h4>
+                        <p class="text-muted mb-0">o haz clic para seleccionar</p>
+                        <input type="file" id="jsonFile" accept=".json" style="display: none;">
+                    </div>
+
+                    <!-- Info del archivo -->
+                    <div id="fileInfo" class="alert alert-success" style="display: none;">
+                        <i class="fas fa-file-code me-2"></i>
+                        <strong>Archivo seleccionado:</strong> <span id="fileName"></span>
+                        <br><small id="fileStats"></small>
+                    </div>
+
+                    <!-- Botón cargar -->
+                    <button class="btn btn-success btn-lg w-100 mb-4" id="btnCargar" disabled onclick="ejecutarCarga()">
+                        <i class="fas fa-database me-2"></i>Cargar Datos Iniciales
+                    </button>
+
+                    <!-- Log de operaciones -->
+                    <div id="logsSection" style="display: none;">
+                        <h5><i class="fas fa-terminal me-2"></i>Log de Operaciones</h5>
+                        <div class="log-container" id="logContainer"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/javascripts/bootstrap.bundle.min.js"></script>
+    <script>
+        let datosJSON = null;
+
+        const uploadZone = document.getElementById('uploadZone');
+        const jsonFile = document.getElementById('jsonFile');
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                procesarArchivo(e.dataTransfer.files[0]);
+            }
+        });
+
+        jsonFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                procesarArchivo(e.target.files[0]);
+            }
+        });
+
+        function procesarArchivo(file) {
+            if (!file.name.endsWith('.json')) {
+                alert('Error: El archivo debe ser .json');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    datosJSON = JSON.parse(e.target.result);
+                    
+                    if (!datosJSON.concesionarios || !datosJSON.vehiculos) {
+                        alert('Error: El JSON debe contener "concesionarios" y "vehiculos"');
+                        datosJSON = null;
+                        return;
+                    }
+
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileStats').textContent = 
+                        `${datosJSON.concesionarios.length} concesionarios, ${datosJSON.vehiculos.length} vehículos`;
+                    document.getElementById('fileInfo').style.display = 'block';
+                    document.getElementById('btnCargar').disabled = false;
+
+                } catch (error) {
+                    alert('Error: El archivo no es un JSON válido');
+                    datosJSON = null;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function addLog(mensaje, tipo = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${tipo}`;
+            logEntry.textContent = mensaje;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function ejecutarCarga() {
+            if (!datosJSON) return;
+
+            document.getElementById('btnCargar').disabled = true;
+            document.getElementById('btnCargar').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cargando...';
+            document.getElementById('logsSection').style.display = 'block';
+            document.getElementById('logContainer').innerHTML = '';
+            
+            addLog('Iniciando carga de datos...', 'info');
+
+            fetch('/carga_inicial/ejecutar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosJSON)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar logs del servidor
+                    data.logs.forEach(log => {
+                        addLog(log.mensaje, log.tipo);
+                    });
+
+                    addLog('════════════════════════════════════', 'info');
+                    addLog(`✅ Carga completada`, 'success');
+                    addLog(`   Concesionarios: ${data.concesionarios_añadidos} añadidos, ${data.concesionarios_actualizados} actualizados`, 'success');
+                    addLog(`   Vehículos: ${data.vehiculos_añadidos} añadidos, ${data.vehiculos_actualizados} actualizados`, 'success');
+                    
+                    document.getElementById('uploadZone').style.display = 'none';
+                    document.getElementById('fileInfo').style.display = 'none';
+                    
+                    document.getElementById('btnCargar').innerHTML = '<i class="fas fa-arrow-right me-2"></i>Ir al Inicio';
+                    document.getElementById('btnCargar').className = 'btn btn-primary btn-lg w-100 mb-4';
+                    document.getElementById('btnCargar').disabled = false;
+                    document.getElementById('btnCargar').onclick = () => { window.location.href = '/'; };
+
+                } else {
+                    addLog('❌ Error: ' + data.message_error, 'error');
+                    document.getElementById('btnCargar').disabled = false;
+                    document.getElementById('btnCargar').innerHTML = '<i class="fas fa-database me-2"></i>Reintentar Carga';
+                }
+            })
+            .catch(error => {
+                addLog('❌ Error de conexión: ' + error.message, 'error');
+                document.getElementById('btnCargar').disabled = false;
+                document.getElementById('btnCargar').innerHTML = '<i class="fas fa-database me-2"></i>Reintentar Carga';
+            });
+        }
+    </script>
+</body>
+</html>
